@@ -1,0 +1,16 @@
+CREATE TABLE category
+(
+    id SERIAL PRIMARY KEY,
+	name CHARACTER VARYING(200) NOT null UNIQUE
+);
+
+CREATE TABLE todo
+(
+    id SERIAL PRIMARY KEY,
+	text CHARACTER VARYING(200),
+	category integer,
+	CONSTRAINT fk_category
+      FOREIGN KEY(category)
+	  REFERENCES category(id)
+	  ON DELETE SET NULL
+);
