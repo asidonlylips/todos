@@ -1,23 +1,10 @@
-from .managers import TodoManager
-
-
 class Category():
-    def __init__(self, args):
-        self.id, self.name = args
-
-    def __eq__(self, other):
-        return self.id == int(other)
+    def __init__(self, id, name):
+        self.id, self.name = id, name
 
 
 class Todo():
-    objects = TodoManager()
 
-    def __init__(self, *args):
-        self.id, self.text, *params = args
-        self.category = Category(params)
-
-    def delete(self):
-        self.objects.delete(self.id)
-
-    def __str__(self):
-        return str(self.__dict__)
+    def __init__(self, id, text, *category_params):
+        self.id, self.text, params = id, text, category_params
+        self.category = Category(*category_params)

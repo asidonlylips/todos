@@ -1,49 +1,45 @@
-from rest_framework import viewsets
-from .serializers import TodoSerializer
 from rest_framework.response import Response
-from .models import Todo
 from rest_framework import status
+from rest_framework.views import APIView
+from .repository import TodoRepository
+from .serializers import TodoSerializer, TodoListQueryParamsSerializer
+from .services import create_todo, update_todo
 
-class TodoViewSet(viewsets.ViewSet):
-    serializer_class = TodoSerializer
-    queryset = Todo.objects.all()
 
-    def list(self, request):
-        todos = Todo.objects.all()
-        print(todos)
-        todos = todo_filter(todos, request.query_params)
+class TodoList(APIView):
+    def get(self, request, format=None):
+        serializer = TodoListQueryParamsSerializer(data=request.query_params)
+        if serializer.is_valid():
+            todos = TodoRepository.get_list(serializer.validated_data.get('category_id'))
+        else:
+            todos = TodoRepository.get_list()
         serializer = TodoSerializer(
             instance=todos, many=True
         )
         return Response(serializer.data)
 
-    def retrieve(self, request, pk=None):
-        obj2 = Todo.objects.get(pk=int(pk))
-        serializer = TodoSerializer(instance=obj2)
-        return Response(serializer.data)
-
-    def update(self, request, pk=None):
-        queryset = Todo.objects.get(pk=pk)
-        serializer = TodoSerializer(queryset, data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-        return Response(serializer.data)
-
-    def create(self, request):
+    def post(self, request, format=None):
         serializer = TodoSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
+        serializer.is_valid(raise_exception=True)
+        todo = create_todo(serializer.validated_data)
+        print(serializer)
+        return Response(TodoSerializer(todo).data)
+
+
+class TodoDetail(APIView):
+    def get(self, request, pk, format=None):
+        todo = TodoRepository.get_single(pk)
+        serializer = TodoSerializer(instance=todo)
         return Response(serializer.data)
 
-    def delete(self, request, pk=None):
-        if pk:  # Only single delete
-            queryset = Todo.objects.get(pk=pk)
-            queryset.delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
-        return Response(status=status.HTTP_403_FORBIDDEN)
+    def put(self, request, pk, format=None):
+        todo = TodoRepository.get_single(pk)
+        serializer = TodoSerializer(todo, data=request.data)
+        serializer.is_valid(raise_exception=True)
+        todo = update_todo(todo, serializer.validated_data)
+        return Response(TodoSerializer(todo).data)
 
-def todo_filter(object, params):
-    for x,y in params.items():
-        if(x=='category'):
-            object = [obj for obj in object if obj.__dict__[x]==y]
-    return object
+    def delete(self, request, pk, format=None):
+        queryset = TodoRepository.get_single(pk)
+        TodoRepository.delete(queryset)
+        return Response(status=status.HTTP_204_NO_CONTENT)
