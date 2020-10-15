@@ -1,19 +1,17 @@
 from rest_framework import viewsets
 from .serializers import TodoSerializer
 from rest_framework.response import Response
-from .repository import Todo
-from django_filters.rest_framework import DjangoFilterBackend
-
+from .models import Todo
+from rest_framework import status
 
 class TodoViewSet(viewsets.ViewSet):
     serializer_class = TodoSerializer
-    filter_backends = [DjangoFilterBackend, ]
-    filterset_fields = ['category', ]
     queryset = Todo.objects.all()
 
     def list(self, request):
         todos = Todo.objects.all()
         print(todos)
+        todos = todo_filter(todos, request.query_params)
         serializer = TodoSerializer(
             instance=todos, many=True
         )
@@ -21,8 +19,7 @@ class TodoViewSet(viewsets.ViewSet):
 
     def retrieve(self, request, pk=None):
         obj2 = Todo.objects.get(pk=int(pk))
-        serializer = TodoSerializer(
-            instance=obj2)
+        serializer = TodoSerializer(instance=obj2)
         return Response(serializer.data)
 
     def update(self, request, pk=None):
@@ -41,9 +38,12 @@ class TodoViewSet(viewsets.ViewSet):
     def delete(self, request, pk=None):
         if pk:  # Only single delete
             queryset = Todo.objects.get(pk=pk)
-            print(type(queryset))
             queryset.delete()
-        return Response()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response(status=status.HTTP_403_FORBIDDEN)
 
-    def filter(self):
-        pass
+def todo_filter(object, params):
+    for x,y in params.items():
+        if(x=='category'):
+            object = [obj for obj in object if obj.__dict__[x]==y]
+    return object

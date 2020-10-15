@@ -2,13 +2,12 @@ from django.db import connection
 
 
 class Executor():
-
     @staticmethod
     def get(query):
         cursor = connection.cursor()
         cursor.execute(query)
 
-        from .repository import Todo
+        from .models import Todo
         row = cursor.fetchone()
         return Todo(*row)
 
@@ -17,10 +16,9 @@ class Executor():
         cursor = connection.cursor()
         cursor.execute(query)
 
-        from .repository import Todo
+        from .models import Todo
         object = [Todo(*row) for row in cursor.fetchall()]
-        object = dict(zip(range(len(object)), object))
-        return object.values()
+        return object
 
     @staticmethod
     def update(query):
@@ -57,3 +55,7 @@ class TodoManager():
     def delete(self, pk):
         query = "delete from todo where id={}".format(pk)
         Executor.delete(query)
+
+    @staticmethod
+    def filter(params):
+        print(params)
