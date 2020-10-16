@@ -17,45 +17,47 @@ class CategoryRepository():
 
     @staticmethod
     def create(category):
-        query = "insert into category(name) values('{0}') returning id".format(category.name)
+        query = ("insert into category(name) values('{0}') "
+                 "returning id").format(category.name)
         with connection.cursor() as cursor:
             cursor.execute(query)
-            category.id = int(cursor.fetchone()[0])
+            category.id = cursor.fetchone()[0]
         return category
 
 
 class TodoRepository():
     @staticmethod
     def get_list(category_id=None):
-        query = ('Select todo.id, todo.text, category.id, '
-                 'category.name from todo '
-                 'join category on todo.category=category.id')
         with connection.cursor() as cursor:
+            query = ('Select todo.id, todo.text, category.id, '
+                     'category.name from todo '
+                     'join category on todo.category=category.id')
+            if category_id:
+                query += " where category.id={}".format(category_id)
             cursor.execute(query)
             rows = cursor.fetchall()
-            queryset = [Todo(*row) for row in rows]
-            print(queryset)
-        if category_id:  # filtering
-            queryset = [item for item in queryset if item.category.id == int(category_id)]
-        return queryset
+            todos = [Todo(*row[:2], Category(*row[2:])) for row in rows]
+        return todos
 
     @staticmethod
     def get_single(pk):
         query = ('select todo.id, todo.text, category.id, '
                  'category.name from todo '
                  'join category on todo.category=category.id '
-                 'where todo.id={}'.format(int(pk)))
+                 'where todo.id={}'.format(pk))
         with connection.cursor() as cursor:
             cursor.execute(query)
             row = cursor.fetchone()
-            queryset = Todo(*row)
-        return queryset
+            todo = Todo(*row[:2], Category(*row[2:]))
+        return todo
 
     @staticmethod
     def update(instance):
         with connection.cursor() as cursor:
             query = ("update todo set text='{0}', category={1}"
-                     "where id={2}").format(instance.text, instance.category.id, instance.id)
+                     "where id={2}").format(instance.text,
+                                            instance.category.id,
+                                            instance.id)
             cursor.execute(query)
         return instance
 
@@ -67,7 +69,7 @@ class TodoRepository():
                                             instance.category.id
                                             )
             cursor.execute(query)
-            instance.id = int(cursor.fetchone()[0])
+            instance.id = cursor.fetchone()[0]
         return instance
 
     @staticmethod
@@ -75,3 +77,11 @@ class TodoRepository():
         query = "delete from todo where id={}".format(instance.id)
         with connection.cursor() as cursor:
             cursor.execute(query)
+
+    @staticmethod
+    def is_pk_exist(pk):
+        with connection.cursor() as cursor:
+            query = ("select todo.id from todo where id={}").format(pk)
+            cursor.execute(query)
+            row = cursor.fetchone()
+        return bool(row)

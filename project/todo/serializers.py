@@ -7,7 +7,7 @@ class CategorySerializer(serializers.Serializer):
 
 
 class TodoListQueryParamsSerializer(serializers.Serializer):
-    category_id = serializers.IntegerField()
+    category_id = serializers.IntegerField(required=False)
 
 
 class TodoSerializer(serializers.Serializer):

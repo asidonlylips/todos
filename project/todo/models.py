@@ -4,7 +4,5 @@ class Category():
 
 
 class Todo():
-
-    def __init__(self, id, text, *category_params):
-        self.id, self.text, params = id, text, category_params
-        self.category = Category(*category_params)
+    def __init__(self, id, text, category):
+        self.id, self.text, self.category = id, text, category
