@@ -1,3 +1,8 @@
-from django.db import models
+class Category():
+    def __init__(self, id, name):
+        self.id, self.name = id, name
 
-# Create your models here.
+
+class Todo():
+    def __init__(self, id, text, category):
+        self.id, self.text, self.category = id, text, category
