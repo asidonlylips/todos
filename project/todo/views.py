@@ -22,7 +22,7 @@ class TodoList(APIView):
         serializer = TodoSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         todo = create_todo(serializer.validated_data)
-        return Response(TodoSerializer(todo).data)
+        return Response(TodoSerializer(todo).data, status=status.HTTP_201_CREATED)
 
 
 class TodoDetail(APIView):
