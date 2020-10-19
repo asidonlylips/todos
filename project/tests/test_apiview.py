@@ -49,6 +49,53 @@ class TestTodoList:
         print(response.data[0]['id'])
 
     @pytest.mark.django_db(transaction=True)
+    def test_todo_incorrect_string_filter(self, api_client):
+        data_1 = {
+            'text': 'test',
+            'category': {
+                'name': 'shoes'
+            }
+        }
+        data_2 = {
+            'text': 'test',
+            'category': {
+                'name': 'newcategory'
+            }
+        }
+        f_1 = TodoFactory.create(**data_1)
+        f_2 = TodoFactory.create(**data_1)
+        f_3 = TodoFactory.create(**data_1)
+        f_4 = TodoFactory.create(**data_1)
+        f_5 = TodoFactory.create(**data_2)
+        url = reverse('todo-list') + "?category_id={0}".format('dsad')
+        response = api_client.get(url)
+        assert response.status_code == 400
+
+    @pytest.mark.django_db(transaction=True)
+    def test_todo_filter_with_unexist_category_id(self, api_client):
+        data_1 = {
+            'text': 'test',
+            'category': {
+                'name': 'shoes'
+            }
+        }
+        data_2 = {
+            'text': 'test',
+            'category': {
+                'name': 'newcategory'
+            }
+        }
+        f_1 = TodoFactory.create(**data_1)
+        f_2 = TodoFactory.create(**data_1)
+        f_3 = TodoFactory.create(**data_1)
+        f_4 = TodoFactory.create(**data_1)
+        f_5 = TodoFactory.create(**data_2)
+        url = reverse('todo-list') + "?category_id={0}".format(10**4)
+        response = api_client.get(url)
+        assert response.status_code == 200
+        assert len(response.data) == 0
+
+    @pytest.mark.django_db(transaction=True)
     def test_create_todo(self, api_client):
         data = {
             'text': 'test',
@@ -77,6 +124,12 @@ class TestTodoDetail:
         assert response.status_code == 200
         assert response.data['id'] == f.id
         assert response.data['text'] == f.text
+
+    @pytest.mark.django_db(transaction=True)
+    def test_get_unexist_todo(self, api_client):
+        url = reverse('todo-detail', kwargs={'pk': 10**4})
+        response = api_client.get(url)
+        assert response.status_code == 404
 
     @pytest.mark.django_db(transaction=True)
     def test_update_todo(self, api_client):
